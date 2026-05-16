@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NTA — Computer Based Test</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Condensed:wght@700&display=swap" rel="stylesheet">
+
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <!-- mammoth.js — Word DOCX extraction -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <!-- JSZip — PPTX/ODT/EPUB extraction -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- SheetJS — Excel XLSX/XLS extraction -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN 1 — SETUP / UPLOAD
+═══════════════════════════════════════════════════ -->
+<div id="setup-screen" class="screen active">
+    <div class="nta-top-bar setup-bar">
+        <div class="nta-logo-area">
+            <div class="nta-logo-emblem">NTA</div>
+            <div class="nta-logo-text">
+                <span class="nta-full-name">National Testing Agency</span>
+                <span class="nta-subtitle">Computer Based Test — Candidate Interface</span>
+            </div>
+        </div>
+        <div class="nta-top-bar-right">
+            <button class="theme-toggle-btn" title="Switch to Dark Mode" aria-label="Toggle theme">🌙</button>
+            <div class="nta-gov-badge">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Emblem_of_India.svg/60px-Emblem_of_India.svg.png"
+                     alt="Emblem of India" class="gov-emblem" onerror="this.style.display='none'">
+            </div>
+        </div>
+    </div>
+
+    <div class="setup-body">
+        <div class="setup-card">
+            <h2 class="setup-heading">Upload Examination Paper</h2>
+            <p class="setup-subheading">Upload an MCQ-based question paper to begin the computer-based test simulation. Supports PDF, Word (.docx/.doc), PowerPoint (.pptx/.ppt), Excel (.xlsx/.xls), plain text, CSV, ODT, and RTF files. Optionally upload a separate answer key file for auto-grading.</p>
+
+            <div class="setup-form">
+
+                <!-- File Upload -->
+                <div class="form-row">
+                    <label class="form-label">Question Paper <span class="required">*</span></label>
+                    <div class="upload-zone" id="upload-zone">
+                        <input type="file" id="file-input"
+                               accept=".pdf,.docx,.doc,.pptx,.ppt,.txt,.csv,.xlsx,.xls,.odt,.rtf,.epub,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-powerpoint,text/plain,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
+                        <div class="upload-inner" id="upload-inner">
+                            <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17,8 12,3 7,8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                            <p class="upload-text">Drag &amp; drop file here or <span class="browse-link" id="browse-trigger">Browse</span></p>
+                            <div class="upload-formats">
+                                <span class="fmt-chip fmt-pdf">PDF</span>
+                                <span class="fmt-chip fmt-word">DOCX</span>
+                                <span class="fmt-chip fmt-word">DOC</span>
+                                <span class="fmt-chip fmt-ppt">PPTX</span>
+                                <span class="fmt-chip fmt-ppt">PPT</span>
+                                <span class="fmt-chip fmt-xls">XLSX</span>
+                                <span class="fmt-chip fmt-xls">XLS</span>
+                                <span class="fmt-chip fmt-txt">TXT</span>
+                                <span class="fmt-chip fmt-txt">CSV</span>
+                                <span class="fmt-chip fmt-other">ODT</span>
+                                <span class="fmt-chip fmt-other">RTF</span>
+                            </div>
+                            <p class="upload-hint">MCQ format: numbered questions with A, B, C, D options. Answer key optional.</p>
+                        </div>
+                        <div class="upload-selected hidden" id="upload-selected">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--answered)" stroke-width="2.5">
+                                <polyline points="20,6 9,17 4,12"/>
+                            </svg>
+                            <div class="upload-file-info">
+                                <span id="file-name-display" class="upload-file-name">file.pdf</span>
+                                <span id="file-type-badge" class="file-type-badge">PDF</span>
+                            </div>
+                            <button class="remove-file-btn" id="remove-file-btn" title="Remove file">✕</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Answer Key Upload (optional) -->
+                <div class="form-row">
+                    <label class="form-label">Answer Key <span class="optional-badge">Optional</span></label>
+                    <div class="upload-zone answer-key-zone" id="answer-key-zone">
+                        <input type="file" id="answer-key-input"
+                               accept=".pdf,.docx,.doc,.pptx,.ppt,.txt,.csv,.xlsx,.xls,.odt,.rtf">
+                        <div class="upload-inner" id="answer-key-inner">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <p class="upload-text">Upload separate answer key file or <span class="browse-link" id="answer-key-browse">Browse</span></p>
+                            <p class="upload-hint">Format: "Ans: A" or "1. A  2. B  3. C …" — enables auto-grading</p>
+                        </div>
+                        <div class="upload-selected hidden" id="answer-key-selected">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--answered)" stroke-width="2.5">
+                                <polyline points="20,6 9,17 4,12"/>
+                            </svg>
+                            <div class="upload-file-info">
+                                <span id="answer-key-name" class="upload-file-name">key.txt</span>
+                                <span class="file-type-badge">Answer Key</span>
+                            </div>
+                            <button class="remove-file-btn" id="remove-key-btn" title="Remove answer key">✕</button>
+                        </div>
+                    </div>
+                    <p class="form-hint-text">💡 If no key is uploaded, the app looks for answers embedded in the question paper (e.g. "Ans: B" after each question).</p>
+                </div>
+
+                <!-- Candidate Name -->
+                <div class="form-row">
+                    <label class="form-label" for="candidate-name">Candidate Name <span class="required">*</span></label>
+                    <input type="text" id="candidate-name" class="form-input" placeholder="Enter your full name" value="CANDIDATE">
+                </div>
+
+                <!-- Roll Number & Exam Name -->
+                <div class="form-row form-row-split">
+                    <div>
+                        <label class="form-label" for="roll-number">Roll Number</label>
+                        <input type="text" id="roll-number" class="form-input" placeholder="e.g. 2300110001" value="2300110001">
+                    </div>
+                    <div>
+                        <label class="form-label" for="exam-name-input">Examination Name</label>
+                        <input type="text" id="exam-name-input" class="form-input" placeholder="e.g. JEE Main 2025" value="CBT Examination">
+                    </div>
+                </div>
+
+                <!-- Duration -->
+                <div class="form-row form-row-split">
+                    <div>
+                        <label class="form-label" for="duration-hours">Duration (Hours)</label>
+                        <input type="number" id="duration-hours" class="form-input" min="0" max="6" value="3">
+                    </div>
+                    <div>
+                        <label class="form-label" for="duration-minutes">Duration (Minutes)</label>
+                        <input type="number" id="duration-minutes" class="form-input" min="0" max="59" value="0">
+                    </div>
+                </div>
+
+                <!-- Error / Loading -->
+                <div id="error-card" class="error-card hidden">
+                    <span class="error-icon">⚠</span>
+                    <span id="error-msg">An error occurred.</span>
+                </div>
+
+                <div id="loading-card" class="loading-card hidden">
+                    <div class="spinner"></div>
+                    <div>
+                        <p class="loading-title">Processing examination paper…</p>
+                        <p class="loading-detail" id="loading-detail">Extracting text</p>
+                    </div>
+                </div>
+
+                <button class="proceed-btn" id="proceed-btn" disabled>
+                    Proceed to Instructions →
+                </button>
+            </div>
+        </div>
+
+        <div class="setup-info-panels">
+            <div class="info-panel">
+                <div class="info-panel-icon">📄</div>
+                <h4>Multiple Formats</h4>
+                <p>PDF, Word, PowerPoint, Excel, CSV, ODT, RTF and plain text supported</p>
+            </div>
+            <div class="info-panel">
+                <div class="info-panel-icon">🔑</div>
+                <h4>Answer Key</h4>
+                <p>Upload a separate key file or embed answers in your paper for auto-grading</p>
+            </div>
+            <div class="info-panel">
+                <div class="info-panel-icon">⏱</div>
+                <h4>Countdown Timer</h4>
+                <p>Exam auto-submits when time expires</p>
+            </div>
+            <div class="info-panel">
+                <div class="info-panel-icon">🔖</div>
+                <h4>Mark for Review</h4>
+                <p>Flag questions to revisit before submitting</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN 2 — INSTRUCTIONS
+═══════════════════════════════════════════════════ -->
+<div id="instructions-screen" class="screen hidden">
+    <div class="nta-top-bar">
+        <div class="nta-logo-area">
+            <div class="nta-logo-emblem">NTA</div>
+            <div class="nta-logo-text">
+                <span class="nta-full-name">National Testing Agency</span>
+                <span id="instr-exam-name" class="nta-subtitle">CBT Examination</span>
+            </div>
+        </div>
+        <div class="header-candidate-info">
+            <button class="theme-toggle-btn" title="Toggle theme" aria-label="Toggle theme">🌙</button>
+            <div class="header-photo-placeholder">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+            </div>
+            <div class="header-cand-details">
+                <span id="instr-candidate-name" class="header-cand-name">CANDIDATE</span>
+                <span id="instr-roll-number" class="header-cand-roll">Roll: —</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="instructions-body">
+        <div class="instructions-container">
+            <h2 class="instr-main-title">General Instructions</h2>
+
+            <div class="instr-section">
+                <h3 class="instr-section-title">Please read the instructions carefully</h3>
+                <ol class="instr-list">
+                    <li>The clock will be set at the server. The countdown timer at the top right corner of screen will display the time remaining for you to complete the examination. When the timer reaches zero, the examination will end automatically.</li>
+                    <li>The Question Palette displayed on the right side of screen will show the status of each question using one of the following symbols:</li>
+                </ol>
+
+                <div class="palette-legend-table">
+                    <div class="plt-row">
+                        <div class="plt-icon not-visited">1</div>
+                        <div class="plt-desc">You have <strong>not visited</strong> the question yet.</div>
+                    </div>
+                    <div class="plt-row">
+                        <div class="plt-icon not-answered">2</div>
+                        <div class="plt-desc">You have <strong>not answered</strong> the question.</div>
+                    </div>
+                    <div class="plt-row">
+                        <div class="plt-icon answered">3</div>
+                        <div class="plt-desc">You have <strong>answered</strong> the question.</div>
+                    </div>
+                    <div class="plt-row">
+                        <div class="plt-icon marked">4</div>
+                        <div class="plt-desc">You have <strong>NOT answered</strong> the question but have <strong>marked the question for review</strong>.</div>
+                    </div>
+                    <div class="plt-row">
+                        <div class="plt-icon answered-marked">5</div>
+                        <div class="plt-desc">You have <strong>answered</strong> the question but <strong>marked it for review</strong>. The answer will be considered for evaluation.</div>
+                    </div>
+                </div>
+
+                <ol class="instr-list" start="3">
+                    <li>You can click on the arrow which appears to the left of question palette to collapse the question palette thereby maximizing the question window.</li>
+                    <li>You can click on your "Profile" image on top right corner of your screen to go to the summary page.</li>
+                    <li>You can click on a section name to view questions in that section.</li>
+                </ol>
+            </div>
+
+            <div class="instr-section">
+                <h3 class="instr-section-title">Navigating to a Question</h3>
+                <ol class="instr-list">
+                    <li>To answer a question, do the following:
+                        <ol type="a">
+                            <li>Click on the question number in the Question Palette at the right of your screen to go to that numbered question directly. Note that using this option does NOT save your answer to the current question.</li>
+                            <li>Click on <strong>Save &amp; Next</strong> to save your answer for the current question and then go to the next question.</li>
+                            <li>Click on <strong>Mark for Review &amp; Next</strong> to save your answer for the current question, mark it for review, and then go to the next question.</li>
+                        </ol>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="instr-section">
+                <h3 class="instr-section-title">Answering a Question</h3>
+                <ol class="instr-list">
+                    <li>Procedure for answering a multiple choice type question:
+                        <ol type="a">
+                            <li>To select your answer, click on the button of one of the options.</li>
+                            <li>To deselect your chosen answer, click on the button of the chosen option again or click on the <strong>Clear Response</strong> button.</li>
+                            <li>To change your chosen answer, click on the button of another option.</li>
+                            <li>To save your answer, you MUST click on the <strong>Save &amp; Next</strong> button.</li>
+                            <li>To mark the question for review, click on the <strong>Mark for Review &amp; Next</strong> button.</li>
+                        </ol>
+                    </li>
+                    <li>To change your answer to a question that has already been answered, first select that question for answering and then follow the procedure for answering that type of question.</li>
+                </ol>
+            </div>
+
+            <div class="instr-section">
+                <h3 class="instr-section-title">Navigating through Sections</h3>
+                <ol class="instr-list">
+                    <li>Sections in this question paper are displayed on the top bar of the screen. Questions in a section can be viewed by clicking on the section name.</li>
+                    <li>After clicking the <strong>Save &amp; Next</strong> button on the last question for a section, you will automatically be taken to the first question of the next section.</li>
+                    <li>You can shuffle between sections and questions anytime during the examination as per your convenience.</li>
+                </ol>
+            </div>
+
+            <div class="instr-agree-row">
+                <label class="agree-checkbox-label">
+                    <input type="checkbox" id="agree-checkbox">
+                    I have read and understood the instructions. All computer hardware allotted to me are in proper working condition. I declare that I am not in possession of / not wearing / not carrying any prohibited gadget like mobile phone, bluetooth devices etc. I agree that in case of not adhering to the instructions, I shall be liable to be debarred from this Test and/or to disciplinary action.
+                </label>
+            </div>
+
+            <div class="instr-footer">
+                <button class="instr-proceed-btn" id="start-exam-btn" disabled>
+                    PROCEED &gt;&gt;
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN 3 — EXAM (CBT Interface)
+═══════════════════════════════════════════════════ -->
+<div id="exam-screen" class="screen hidden">
+
+    <!-- NTA Header -->
+    <div class="nta-top-bar exam-bar">
+        <div class="nta-logo-area">
+            <div class="nta-logo-emblem">NTA</div>
+            <div class="nta-logo-text">
+                <span class="nta-full-name">National Testing Agency</span>
+                <span id="exam-name-display" class="nta-subtitle">CBT Examination</span>
+            </div>
+        </div>
+        <div class="header-candidate-info">
+            <button class="theme-toggle-btn" title="Toggle theme" aria-label="Toggle theme">🌙</button>
+            <div class="header-photo-placeholder clickable" id="candidate-summary-btn" title="View Summary">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+            </div>
+            <div class="header-cand-details">
+                <span id="exam-candidate-name" class="header-cand-name">CANDIDATE</span>
+                <span id="exam-roll-number" class="header-cand-roll">Roll: —</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section tabs -->
+    <div class="section-tabs-bar">
+        <div class="section-tabs-inner">
+            <button class="section-tab active" id="section-tab-1">Section I</button>
+        </div>
+        <div class="question-paper-btn-wrap">
+            <button class="qpaper-btn" id="qpaper-btn">Question Paper</button>
+        </div>
+    </div>
+
+    <!-- Main exam layout -->
+    <div class="exam-layout" id="exam-layout">
+
+        <!-- LEFT — Question area -->
+        <div class="exam-main" id="exam-main">
+            <div class="question-header-bar">
+                <span class="qtype-label">Question Type: MCQ (Single Correct)</span>
+                <span class="q-num-label" id="q-num-label">Question No. 1</span>
+            </div>
+
+            <div class="question-body-area">
+                <div class="question-text" id="question-text">Loading question…</div>
+                <div class="options-list" id="options-list"></div>
+            </div>
+
+            <!-- Footer buttons -->
+            <div class="exam-footer">
+                <div class="footer-left">
+                    <button class="btn-mark-review" id="btn-mark-review" onclick="markForReviewAndNext()">
+                        Mark for Review &amp; Next
+                    </button>
+                    <button class="btn-clear" id="btn-clear" onclick="clearResponse()">
+                        Clear Response
+                    </button>
+                </div>
+                <div class="footer-right">
+                    <button class="btn-prev" id="btn-prev" onclick="navigatePrev()">
+                        ← Previous
+                    </button>
+                    <button class="btn-save-next" id="btn-save-next" onclick="saveAndNext()">
+                        Save &amp; Next →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT — Palette panel -->
+        <div class="exam-sidebar" id="exam-sidebar">
+            <!-- Candidate card -->
+            <div class="sidebar-candidate-card">
+                <div class="sidebar-photo">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="1.5">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </div>
+                <div class="sidebar-cand-info">
+                    <span id="sidebar-candidate-name" class="sidebar-cand-name">CANDIDATE</span>
+                    <span id="sidebar-roll" class="sidebar-cand-roll">Roll: —</span>
+                </div>
+            </div>
+
+            <!-- Timer -->
+            <div class="timer-panel">
+                <div class="timer-label">Time Left</div>
+                <div class="timer-display" id="timer-display">03:00:00</div>
+            </div>
+
+            <!-- Question Palette -->
+            <div class="palette-section">
+                <div class="palette-section-header">
+                    <span class="palette-section-name" id="palette-section-name">Section I</span>
+                    <span class="palette-counts" id="palette-counts"></span>
+                </div>
+                <div class="palette-legend">
+                    <div class="legend-row">
+                        <div class="legend-icon answered">0</div><span>Answered</span>
+                        <div class="legend-icon not-answered">0</div><span>Not Answered</span>
+                    </div>
+                    <div class="legend-row">
+                        <div class="legend-icon not-visited">0</div><span>Not Visited</span>
+                        <div class="legend-icon marked">0</div><span>Marked for Review</span>
+                    </div>
+                    <div class="legend-row">
+                        <div class="legend-icon answered-marked">0</div><span>Answered &amp; Marked</span>
+                    </div>
+                </div>
+                <div class="palette-grid" id="palette-grid"></div>
+            </div>
+
+            <!-- Submit button in sidebar -->
+            <button class="sidebar-submit-btn" onclick="submitExam()">Submit</button>
+        </div>
+
+        <!-- Collapse toggle -->
+        <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle palette">&#9654;</button>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN 4 — RESULTS
+═══════════════════════════════════════════════════ -->
+<div id="result-screen" class="screen hidden">
+    <div class="nta-top-bar">
+        <div class="nta-logo-area">
+            <div class="nta-logo-emblem">NTA</div>
+            <div class="nta-logo-text">
+                <span class="nta-full-name">National Testing Agency</span>
+                <span id="result-exam-name" class="nta-subtitle">CBT Examination — Result</span>
+            </div>
+        </div>
+        <div class="header-candidate-info">
+            <button class="theme-toggle-btn" title="Toggle theme" aria-label="Toggle theme">🌙</button>
+        </div>
+    </div>
+
+    <div class="results-body">
+        <div class="results-container">
+            <div class="results-title-bar">
+                <h2 id="result-exam-title">Examination Result</h2>
+                <p id="result-candidate-info" class="result-cand-info"></p>
+            </div>
+
+            <!-- Score card -->
+            <div class="score-card">
+                <div class="score-main">
+                    <div class="score-ring-wrap">
+                        <svg class="score-ring" viewBox="0 0 120 120">
+                            <circle class="ring-track" cx="60" cy="60" r="50"/>
+                            <circle class="ring-fill" id="score-ring-fill" cx="60" cy="60" r="50"
+                                    stroke-dasharray="314.16" stroke-dashoffset="314.16"/>
+                        </svg>
+                        <div class="score-center">
+                            <span class="score-pct-value" id="score-pct">—</span>
+                            <span class="score-pct-label">Score</span>
+                        </div>
+                    </div>
+                    <div class="score-breakdown">
+                        <div class="score-stat-row">
+                            <span class="score-stat-label">Total Questions</span>
+                            <span class="score-stat-value" id="stat-total">0</span>
+                        </div>
+                        <div class="score-stat-row correct-row">
+                            <span class="score-stat-label">✓ Correct</span>
+                            <span class="score-stat-value" id="stat-correct">—</span>
+                        </div>
+                        <div class="score-stat-row incorrect-row">
+                            <span class="score-stat-label">✗ Incorrect</span>
+                            <span class="score-stat-value" id="stat-incorrect">—</span>
+                        </div>
+                        <div class="score-stat-row skipped-row">
+                            <span class="score-stat-label">— Not Attempted</span>
+                            <span class="score-stat-value" id="stat-skipped">0</span>
+                        </div>
+                        <div class="score-stat-row time-row">
+                            <span class="score-stat-label">⏱ Time Used</span>
+                            <span class="score-stat-value" id="stat-time">—</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="no-key-notice" class="no-key-notice hidden">
+                <strong>ℹ Notice:</strong> No answer key was detected in the uploaded file. Auto-grading was not possible — your responses are shown below.
+            </div>
+
+            <!-- Answer Review -->
+            <div class="review-section">
+                <h3 class="review-section-title">Answer Review</h3>
+                <div class="review-table-wrap">
+                    <table class="review-table">
+                        <thead>
+                            <tr>
+                                <th>Q. No.</th>
+                                <th>Your Answer</th>
+                                <th>Correct Answer</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="review-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="results-actions">
+                <button class="btn-print-result" onclick="printResults()">
+                    🖨 Print Result
+                </button>
+                <button class="btn-new-exam" onclick="window.location.reload()">← Start New Exam</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     MODAL — Question Paper Popup
+═══════════════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="qpaper-modal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3>Question Paper Summary</h3>
+            <button class="modal-close-btn" onclick="closeQPaperModal()">✕</button>
+        </div>
+        <div class="modal-body" id="qpaper-modal-body"></div>
+    </div>
+</div>
+
+<!-- MODAL — Submit Confirmation -->
+<div class="modal-overlay hidden" id="submit-modal">
+    <div class="modal-box modal-box-sm">
+        <div class="modal-header">
+            <h3>Submit Examination</h3>
+        </div>
+        <div class="modal-body">
+            <div class="submit-summary" id="submit-summary-text"></div>
+            <p class="submit-warning">Are you sure you want to submit? <strong>This action cannot be undone.</strong></p>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-cancel-btn" onclick="closeSubmitModal()">Cancel</button>
+            <button class="modal-confirm-btn" onclick="confirmSubmit()">Submit Exam</button>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
